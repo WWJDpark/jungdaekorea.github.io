@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-바이오헬스, 골든타임을 위한 인재 전략 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #1a202c;
+            letter-spacing: -0.05em;
+        }
+
+        .dashboard-header .subtitle {
+            font-size: 1.25rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .tab-buttons {
+            border-bottom: 2px solid #cbd5e0;
+            margin-bottom: 2rem;
+        }
+
+        .tab-button {
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #718096;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .tab-button.active {
+            color: #2b6cb0;
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #2b6cb0;
+            border-radius: 2px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #e2e8f0;
+        }
+
+        .kpi-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .kpi-card .label {
+            font-size: 1rem;
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-card .value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2c5282;
+        }
+        
+        .kpi-card .value .unit {
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+             background-color: #fff;
+             padding: 2rem;
+             border-radius: 0.75rem;
+             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+             height: 450px;
+        }
+        
+        .insight-card {
+            background: #e3f2fd;
+            border-left: 5px solid #1e88e5;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        
+        .insight-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1565c0;
+            margin-bottom: 0.75rem;
+        }
+        
+        .insight-card p {
+            color: #0d47a1;
+            line-height: 1.7;
+        }
+
+        .strategy-card {
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .strategy-card .header {
+            padding: 1.5rem;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+        .strategy-card .content {
+            padding: 1.5rem;
+        }
+        .strategy-card ul { list-style-position: inside; }
+        .strategy-card li { margin-bottom: 0.75rem; color: #4a5568; }
+
+        .bg-strategy-1 { background-color: #1e88e5; }
+        .bg-strategy-2 { background-color: #43a047; }
+        .bg-strategy-3 { background-color: #f4511e; }
+        .bg-strategy-4 { background-color: #5e35b1; }
+
+    </style>
+</head>
+
+<body class="bg-gray-100">
+
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1 >K-바이오헬스 인재 전략 대시보드</h1>
+            <p class="subtitle">데이터 기반 진단, 글로벌 벤치마킹, 그리고 미래를 위한 실행 계획</p>
+        </header>
+
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab(event, 'tab-overview')">종합 현황 대시보드</button>
+            <button class="tab-button" onclick="openTab(event, 'tab-deepdive')">3대 분야 심층 분석</button>
+            <button class="tab-button" onclick="openTab(event, 'tab-global')">글로벌 벤치마킹</button>
+            <button class="tab-button" onclick="openTab(event, 'tab-strategy')">미래 인재 전략</button>
+        </div>
+
+        <!-- Tab 1: Overview -->
+        <div id="tab-overview" class="tab-content active">
+            <h2 class="section-title">종합 현황 및 3대 핵심 과제</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="kpi-card">
+                    <div class="label">총 산업기술인력</div>
+                    <div class="value">67,531<span class="unit"> 명</span></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="label">총 부족 인원</div>
+                    <div class="value">1,782<span class="unit"> 명</span></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="label">평균 인력 부족률</div>
+                    <div class="value">2.6<span class="unit"> %</span></div>
+                </div>
+                <div class="kpi-card">
+                    <div class="label">신입 조기퇴사율</div>
+                    <div class="value">29.5<span class="unit"> %</span></div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div class="lg:col-span-3 chart-container">
+                    <canvas id="mainWorkforceChart"></canvas>
+                </div>
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="insight-card">
+                        <h3>문제 1: 질적 미스매치</h3>
+                        <p>R&D직 부족률(평균 5.0%)이 전체 평균(2.6%)의 약 2배. 특히 학사급 R&D 인력난 심각. 기업은 '필요 역량을 갖춘 인력 부족'을 1순위로 지목.</p>
+                    </div>
+                     <div class="insight-card">
+                        <h3>문제 2: 높은 조기이탈률</h3>
+                        <p>신입사원 조기퇴사율(1년 내)이 29.5%에 달하며, 경력직(12.3%)의 2배 이상. 특히 중소기업과 연구개발직에서 이탈이 심각.</p>
+                    </div>
+                     <div class="insight-card">
+                        <h3>문제 3: 지역 불균형</h3>
+                        <p>산업기술인력의 50.2%가 수도권에 집중. 대경권(5.9%) 등 비수도권의 인력 부족률이 수도권(1.8%) 대비 최대 3배 이상.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Deep Dive -->
+        <div id="tab-deepdive" class="tab-content">
+             <h2 class="section-title">3대 분야별 심층 분석: 어디가, 왜, 얼마나 부족한가?</h2>
+             <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div class="flex flex-col space-y-6">
+                    <h3 class="text-xl font-bold text-center text-blue-800">디지털 헬스케어</h3>
+                    <div class="chart-container flex-grow"><canvas id="digitalHealthChart"></canvas></div>
+                    <div class="insight-card">
+                        <h3>핵심 진단</h3>
+                        <p>SW/데이터 융합 인재의 공급 절벽 현상. 특히 '의료용 SW 개발' 및 '데이터 분석' 역량을 갖춘 실무 인력 수요가 폭발적이나, 공급이 절대적으로 부족.</p>
+                    </div>
+                </div>
+                <div class="flex flex-col space-y-6">
+                    <h3 class="text-xl font-bold text-center text-green-800">바이오 산업</h3>
+                    <div class="chart-container flex-grow"><canvas id="bioIndustryChart"></canvas></div>
+                    <div class="insight-card">
+                        <h3>핵심 진단</h3>
+                        <p>R&D 두뇌(연구개발직 부족률 5.6%)와 생산 현장 허리(기술직 부족인원 556명) 동시 위기. 고학력 인재는 공급 부족, 현장 인력은 높은 이직률로 불안정.</p>
+                    </div>
+                </div>
+                 <div class="flex flex-col space-y-6">
+                    <h3 class="text-xl font-bold text-center text-purple-800">의료기기 산업</h3>
+                    <div class="chart-container flex-grow"><canvas id="medicalDeviceChart"></canvas></div>
+                    <div class="insight-card">
+                        <h3>핵심 진단</h3>
+                        <p>실무형 '학사급 R&D 인력' 부족률(11.9%)이 가장 심각. 석·박사와 생산직 사이의 '기술 허리'가 실종되어 제품화 및 공정 개선에 병목 현상 발생.</p>
+                    </div>
+                </div>
+             </div>
+        </div>
+
+        <!-- Tab 3: Global Benchmark -->
+        <div id="tab-global" class="tab-content">
+            <h2 class="section-title">글로벌 벤치마킹: 해외 선진국은 어떻게 대응하는가?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                 <div class="strategy-card">
+                    <div class="header bg-red-700">미국: 민간 주도, 실리콘밸리식 생태계</div>
+                    <div class="content">
+                        <ul>
+                            <li><strong>Stanford Biodesign:</strong> 의학, 공학, 비즈니스를 융합한 실전형 교육으로 의료기기 창업가 배출.</li>
+                            <li><strong>JLABS (J&J):</strong> 스타트업에 인프라와 멘토링을 제공, 자연스럽게 인재를 흡수하고 산업 생태계 확장.</li>
+                            <li><strong>유연한 학위 과정:</strong> 데이터 과학, 바이오인포매틱스 등 산업 수요에 맞춘 단기 석사 및 인증 과정 활성화.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="header bg-black">독일: 정부 주도, 제조업 강점 연계</div>
+                    <div class="content">
+                        <ul>
+                            <li><strong>'Health - Made in Germany':</strong> 정부 주도로 바이오헬스 산업의 글로벌 진출 및 인재 교류 지원.</li>
+                            <li><strong>Fraunhofer 등 연구기관 연계:</strong> 응용 연구 중심의 프라운호퍼 연구소들이 기업과 공동으로 프로젝트를 수행하며 실무 인력 양성.</li>
+                            <li><strong>마이스터 제도 연계:</strong> 바이오의약품 생산, 품질관리 분야에 특화된 고숙련 기술 장인(마이스터) 양성.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="strategy-card">
+                    <div class="header bg-blue-800">일본: 규제 개선 및 해외 인재 유치</div>
+                     <div class="content">
+                        <ul>
+                           <li><strong>규제 샌드박스:</strong> 신기술 실증을 위한 규제 샌드박스를 통해 혁신 기업을 유치하고 관련 인재의 실무 경험 축적 지원.</li>
+                           <li><strong>고도인재 포인트 제도:</strong> 해외 우수 R&D 인력 유치를 위해 영주권 취득 요건을 완화하는 등 파격적인 비자 혜택 제공.</li>
+                           <li><strong>해외 트레이닝 센터:</strong> 올림푸스 등 선도 기업들이 해외에 의료기술 트레이닝 센터를 설립, 현지 인력 양성과 동시에 자사 기술 표준 전파.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Strategy -->
+        <div id="tab-strategy" class="tab-content">
+            <h2 class="section-title">K-바이오헬스 인재 혁신 4대 전략</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+                <div class="strategy-card">
+                    <div class="header bg-strategy-1">1. 실무 중심 교육 혁신</div>
+                    <div class="content">
+                        <p class="font-bold mb-4 text-gray-700">산업계가 즉시 채용 가능한 '준비된 인재' 양성</p>
+                        <ul>
+                            <li><strong>채용 연계형 계약학과 확대:</strong> 의료AI, 규제과학 등 기업 수요 기반 학과 신설</li>
+                            <li><strong>'바이오 전환' 리스킬링 바우처 도입:</strong> IT,화학 경력자 대상 재교육 지원</li>
+                            <li><strong>교수-기업 전문가 공동 강의 의무화:</strong> 전공과목 내 산업 현장 연계 강화</li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="strategy-card">
+                    <div class="header bg-strategy-2">2. 성장 연계 경력 개발</div>
+                    <div class="content">
+                        <p class="font-bold mb-4 text-gray-700">일하고 싶고, 성장할 수 있는 '매력적인 직장' 구축</p>
+                        <ul>
+                            <li><strong>신입 온보딩 프로그램 표준화:</strong> 1년 내 직무교육/멘토링 의무화 및 인센티브</li>
+                            <li><strong>직무별 성장 로드맵 제시:</strong> 생산/품질/인허가 등 직무 전문성 트랙 도입</li>
+                            <li><strong>성과 기반 보상제도 확대:</strong> 중소벤처 스톡옵션/RSU 세제 지원 강화</li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="strategy-card">
+                    <div class="header bg-strategy-3">3. 지역 거점 생태계 조성</div>
+                    <div class="content">
+                        <p class="font-bold mb-4 text-gray-700">수도권 밖에서도 인재가 모이고 크는 '혁신 클러스터' 육성</p>
+                        <ul>
+                            <li><strong>'K-바이오 혁신지구' 지정:</strong> 비수도권에 R&D-인력양성 프로젝트 집중</li>
+                            <li><strong>지역인재 채용 파격 인센티브:</strong> 법인세 감면, 고용보조금 등 패키지 지원</li>
+                            <li><strong>온/오프라인 채용 채널 상시 운영:</strong> 지역 기업과 수도권 인재 연결</li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="strategy-card">
+                    <div class="header bg-strategy-4">4. 수요자 중심 정책 연결</div>
+                    <div class="content">
+                        <p class="font-bold mb-4 text-gray-700">흩어진 정보를 모으고 장벽을 낮추는 '스마트 행정' 구현</p>
+                        <ul>
+                            <li><strong>'K-바이오 HRD' 통합 플랫폼 구축:</strong> 범부처 인력 사업 원스톱 신청/관리</li>
+                            <li><strong>AI 기반 맞춤형 정책 추천:</strong> 기업 특성 분석 후 최적 지원사업 자동 추천</li>
+                            <li><strong>신청 절차 간소화 및 Fast-Track 도입:</strong> 우수 중소기업 대상 심사 기간 단축</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        Chart.register(ChartDataLabels);
+        Chart.defaults.font.family = "'Pretendard', sans-serif";
+        Chart.defaults.plugins.datalabels.display = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Main Chart
+            const mainCtx = document.getElementById('mainWorkforceChart').getContext('2d');
+            new Chart(mainCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['바이오산업', '의료기기', '디지털헬스케어'],
+                    datasets: [{
+                        label: '총 산업기술인력 (명)',
+                        data: [35034, 16862, 15635],
+                        backgroundColor: 'rgba(66, 133, 244, 0.7)',
+                        yAxisID: 'y'
+                    }, {
+                        label: '부족률 (%)',
+                        data: [3.1, 1.9, 2.0],
+                        type: 'line',
+                        borderColor: '#e94235',
+                        backgroundColor: '#e94235',
+                        yAxisID: 'y1',
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: '분야별 인력 규모 및 부족률', font: { size: 18 } } },
+                    scales: {
+                        y: { position: 'left', title: { display: true, text: '인원 (명)' } },
+                        y1: { position: 'right', title: { display: true, text: '부족률 (%)' }, grid: { drawOnChartArea: false }, ticks: { callback: value => value + '%' } }
+                    }
+                }
+            });
+
+            // Deep Dive Charts
+            const digitalHealthCtx = document.getElementById('digitalHealthChart').getContext('2d');
+            new Chart(digitalHealthCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['SW 개발', '데이터 분석', '인허가(RA)', '기타'],
+                    datasets: [{
+                        data: [41.0, 37.1, 14.0, 7.9],
+                        backgroundColor: ['#4285F4', '#34A853', '#FBBC05', '#EA4335'],
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '필요 역량 분포', font: {size: 14} }, datalabels: { display: true, color: '#fff', formatter: (val) => val.toFixed(1) + '%' } } }
+            });
+
+            const bioIndustryCtx = document.getElementById('bioIndustryChart').getContext('2d');
+             new Chart(bioIndustryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['바이오화학', 'R&D', '생산공정', '기타'],
+                    datasets: [{
+                        data: [60.8, 42.7, 26.6, 15.2], //기타는 가상
+                         backgroundColor: ['#0F9D58', '#DB4437', '#4285F4', '#F4B400'],
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '필요 인력 분야', font: {size: 14} }, datalabels: { display: true, color: '#fff', formatter: (val) => val.toFixed(1) + '%' } } }
+            });
+
+            const medicalDeviceCtx = document.getElementById('medicalDeviceChart').getContext('2d');
+            new Chart(medicalDeviceCtx, {
+                 type: 'bar',
+                 data: {
+                     labels: ['학사급 R&D', '전체 R&D', '전체 기술직'],
+                     datasets: [{
+                         label: '인력 부족률 (%)',
+                         data: [11.9, 6.8, 1.5],
+                         backgroundColor: ['#673AB7', '#9575CD', '#D1C4E9']
+                     }]
+                 },
+                 options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'R&D 인력난 심층 분석', font: {size: 14} }, legend: {display: false}, datalabels: {display: true, anchor: 'end', align: 'top', color: '#333'} } }
+            });
+        });
+    </script>
+</body>
+</html>
