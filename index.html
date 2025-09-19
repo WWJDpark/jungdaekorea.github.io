@@ -1,345 +1,256 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K-바이오헬스, 골든타임을 위한 인재 전략 대시보드</title>
+    <title>솔비와 정대를 위한 다낭 이야기</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Da Nang Sunset (Warm Neutrals with Coral/Teal accents) -->
+    <!-- Application Structure Plan: A tab-based single-page application where each tab represents a day of the trip or essential tips. This structure is chosen for its simplicity and intuitive user flow, allowing users to focus on one day at a time without overwhelming scrolling. The navigation is always visible at the top for easy switching. Inside each day, a vertical timeline presents the schedule chronologically, which is the most natural way to understand a travel plan. Conditional plans (Plan A/B for weather) are clearly separated for easy decision-making. The overall design is romantic and soft to match the user's request for a plan to share with a girlfriend. -->
+    <!-- Visualization & Content Choices: 
+        - Flight Info -> Goal: Inform -> Presentation: Styled HTML card resembling a ticket -> Interaction: Static -> Justification: Presents critical info clearly at the top.
+        - Daily Itinerary -> Goal: Organize -> Presentation: Vertical timeline with icons, created using Tailwind CSS -> Interaction: Main navigation tabs (JS-powered) to show/hide daily content -> Justification: Chronological and focused view is ideal for a schedule.
+        - Restaurant Info -> Goal: Contextual Info -> Presentation: Detailed cards within the timeline including recommended menus and estimated prices -> Interaction: Static -> Justification: Provides actionable details at the point of relevance.
+        - Travel Tips -> Goal: Advise -> Presentation: A separate tab with a checklist format -> Interaction: Part of the main tab navigation -> Justification: Consolidates practical, non-schedule information for easy reference.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Noto Sans KR', sans-serif;
         }
-
-        .dashboard-container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 2rem;
+        .font-display {
+            font-family: 'Playfair Display', serif;
         }
-
-        .dashboard-header h1 {
-            font-size: 3rem;
-            font-weight: 900;
-            color: #1a202c;
-            letter-spacing: -0.05em;
+        .tab-btn.active {
+            border-color: #F472B6;
+            color: #F472B6;
+            font-weight: 700;
         }
-
-        .dashboard-header .subtitle {
-            font-size: 1.25rem;
-            color: #4a5568;
-            font-weight: 500;
-        }
-
-        .tab-buttons {
-            border-bottom: 2px solid #cbd5e0;
-            margin-bottom: 2rem;
-        }
-
-        .tab-button {
-            padding: 1rem 1.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            background: none;
-            color: #718096;
-            position: relative;
-            transition: color 0.3s;
-        }
-
-        .tab-button.active {
-            color: #2b6cb0;
-        }
-        
-        .tab-button.active::after {
+        .timeline-item::before {
             content: '';
             position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background-color: #2b6cb0;
-            border-radius: 2px;
+            left: -29px;
+            top: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid #FBCFE8;
         }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 3px solid #e2e8f0;
-        }
-
-        .kpi-card {
-            background-color: #fff;
-            padding: 1.5rem;
+        .plan-box {
+            border: 2px dashed #cbd5e1;
+            padding: 1rem;
             border-radius: 0.75rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            text-align: center;
+            margin-top: 1.5rem;
         }
-
-        .kpi-card .label {
-            font-size: 1rem;
-            color: #4a5568;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .kpi-card .value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #2c5282;
-        }
-        
-        .kpi-card .value .unit {
-            font-size: 1.25rem;
-            font-weight: 500;
-        }
-        
-        .chart-container {
-             background-color: #fff;
-             padding: 2rem;
-             border-radius: 0.75rem;
-             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-             height: 450px;
-        }
-        
-        .insight-card {
-            background: #e3f2fd;
-            border-left: 5px solid #1e88e5;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-        }
-        
-        .insight-card h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1565c0;
-            margin-bottom: 0.75rem;
-        }
-        
-        .insight-card p {
-            color: #0d47a1;
-            line-height: 1.7;
-        }
-
-        .strategy-card {
-            background: #fff;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-        .strategy-card .header {
-            padding: 1.5rem;
-            color: #fff;
-            font-weight: 700;
-            font-size: 1.25rem;
-        }
-        .strategy-card .content {
-            padding: 1.5rem;
-        }
-        .strategy-card ul { list-style-position: inside; }
-        .strategy-card li { margin-bottom: 0.75rem; color: #4a5568; }
-
-        .bg-strategy-1 { background-color: #1e88e5; }
-        .bg-strategy-2 { background-color: #43a047; }
-        .bg-strategy-3 { background-color: #f4511e; }
-        .bg-strategy-4 { background-color: #5e35b1; }
-
     </style>
 </head>
-
-<body class="bg-gray-100">
-
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <h1 >K-바이오헬스 인재 전략 대시보드</h1>
-            <p class="subtitle">데이터 기반 진단, 글로벌 벤치마킹, 그리고 미래를 위한 실행 계획</p>
+<body class="bg-rose-50 text-gray-700">
+    <div class="container mx-auto max-w-4xl p-4 md:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-display text-pink-500">Our Da Nang Story</h1>
+            <p class="text-lg text-gray-500 mt-2">솔비와 정대를 위한 3박 4일, 2025년 9월 26일 ~ 9월 29일</p>
         </header>
 
-        <div class="tab-buttons">
-            <button class="tab-button active" onclick="openTab(event, 'tab-overview')">종합 현황 대시보드</button>
-            <button class="tab-button" onclick="openTab(event, 'tab-deepdive')">3대 분야 심층 분석</button>
-            <button class="tab-button" onclick="openTab(event, 'tab-global')">글로벌 벤치마킹</button>
-            <button class="tab-button" onclick="openTab(event, 'tab-strategy')">미래 인재 전략</button>
-        </div>
-
-        <!-- Tab 1: Overview -->
-        <div id="tab-overview" class="tab-content active">
-            <h2 class="section-title">종합 현황 및 3대 핵심 과제</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="kpi-card">
-                    <div class="label">총 산업기술인력</div>
-                    <div class="value">67,531<span class="unit"> 명</span></div>
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">✈️ 우리의 비행기</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <p class="font-bold text-blue-800">가는 날 | 인천 (ICN) → 다낭 (DAD)</p>
+                    <p class="text-gray-600">2025년 9월 26일 (금)</p>
+                    <p class="text-xl font-bold text-blue-600">10:40 AM → 01:20 PM</p>
+                    <p class="text-sm text-gray-500">제주항공 7C2211</p>
                 </div>
-                <div class="kpi-card">
-                    <div class="label">총 부족 인원</div>
-                    <div class="value">1,782<span class="unit"> 명</span></div>
-                </div>
-                <div class="kpi-card">
-                    <div class="label">평균 인력 부족률</div>
-                    <div class="value">2.6<span class="unit"> %</span></div>
-                </div>
-                <div class="kpi-card">
-                    <div class="label">신입 조기퇴사율</div>
-                    <div class="value">29.5<span class="unit"> %</span></div>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div class="lg:col-span-3 chart-container">
-                    <canvas id="mainWorkforceChart"></canvas>
-                </div>
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="insight-card">
-                        <h3>문제 1: 질적 미스매치</h3>
-                        <p>R&D직 부족률(평균 5.0%)이 전체 평균(2.6%)의 약 2배. 특히 학사급 R&D 인력난 심각. 기업은 '필요 역량을 갖춘 인력 부족'을 1순위로 지목.</p>
-                    </div>
-                     <div class="insight-card">
-                        <h3>문제 2: 높은 조기이탈률</h3>
-                        <p>신입사원 조기퇴사율(1년 내)이 29.5%에 달하며, 경력직(12.3%)의 2배 이상. 특히 중소기업과 연구개발직에서 이탈이 심각.</p>
-                    </div>
-                     <div class="insight-card">
-                        <h3>문제 3: 지역 불균형</h3>
-                        <p>산업기술인력의 50.2%가 수도권에 집중. 대경권(5.9%) 등 비수도권의 인력 부족률이 수도권(1.8%) 대비 최대 3배 이상.</p>
-                    </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <p class="font-bold text-green-800">오는 날 | 다낭 (DAD) → 인천 (ICN)</p>
+                    <p class="text-gray-600">2025년 9월 29일 (월)</p>
+                    <p class="text-xl font-bold text-green-600">10:45 PM → 05:00 AM+1</p>
+                    <p class="text-sm text-gray-500">비엣젯항공 VJ880</p>
                 </div>
             </div>
         </div>
 
-        <!-- Tab 2: Deep Dive -->
-        <div id="tab-deepdive" class="tab-content">
-             <h2 class="section-title">3대 분야별 심층 분석: 어디가, 왜, 얼마나 부족한가?</h2>
-             <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                <div class="flex flex-col space-y-6">
-                    <h3 class="text-xl font-bold text-center text-blue-800">디지털 헬스케어</h3>
-                    <div class="chart-container flex-grow"><canvas id="digitalHealthChart"></canvas></div>
-                    <div class="insight-card">
-                        <h3>핵심 진단</h3>
-                        <p>SW/데이터 융합 인재의 공급 절벽 현상. 특히 '의료용 SW 개발' 및 '데이터 분석' 역량을 갖춘 실무 인력 수요가 폭발적이나, 공급이 절대적으로 부족.</p>
-                    </div>
-                </div>
-                <div class="flex flex-col space-y-6">
-                    <h3 class="text-xl font-bold text-center text-green-800">바이오 산업</h3>
-                    <div class="chart-container flex-grow"><canvas id="bioIndustryChart"></canvas></div>
-                    <div class="insight-card">
-                        <h3>핵심 진단</h3>
-                        <p>R&D 두뇌(연구개발직 부족률 5.6%)와 생산 현장 허리(기술직 부족인원 556명) 동시 위기. 고학력 인재는 공급 부족, 현장 인력은 높은 이직률로 불안정.</p>
-                    </div>
-                </div>
-                 <div class="flex flex-col space-y-6">
-                    <h3 class="text-xl font-bold text-center text-purple-800">의료기기 산업</h3>
-                    <div class="chart-container flex-grow"><canvas id="medicalDeviceChart"></canvas></div>
-                    <div class="insight-card">
-                        <h3>핵심 진단</h3>
-                        <p>실무형 '학사급 R&D 인력' 부족률(11.9%)이 가장 심각. 석·박사와 생산직 사이의 '기술 허리'가 실종되어 제품화 및 공정 개선에 병목 현상 발생.</p>
-                    </div>
-                </div>
-             </div>
-        </div>
-
-        <!-- Tab 3: Global Benchmark -->
-        <div id="tab-global" class="tab-content">
-            <h2 class="section-title">글로벌 벤치마킹: 해외 선진국은 어떻게 대응하는가?</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                 <div class="strategy-card">
-                    <div class="header bg-red-700">미국: 민간 주도, 실리콘밸리식 생태계</div>
-                    <div class="content">
-                        <ul>
-                            <li><strong>Stanford Biodesign:</strong> 의학, 공학, 비즈니스를 융합한 실전형 교육으로 의료기기 창업가 배출.</li>
-                            <li><strong>JLABS (J&J):</strong> 스타트업에 인프라와 멘토링을 제공, 자연스럽게 인재를 흡수하고 산업 생태계 확장.</li>
-                            <li><strong>유연한 학위 과정:</strong> 데이터 과학, 바이오인포매틱스 등 산업 수요에 맞춘 단기 석사 및 인증 과정 활성화.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="strategy-card">
-                    <div class="header bg-black">독일: 정부 주도, 제조업 강점 연계</div>
-                    <div class="content">
-                        <ul>
-                            <li><strong>'Health - Made in Germany':</strong> 정부 주도로 바이오헬스 산업의 글로벌 진출 및 인재 교류 지원.</li>
-                            <li><strong>Fraunhofer 등 연구기관 연계:</strong> 응용 연구 중심의 프라운호퍼 연구소들이 기업과 공동으로 프로젝트를 수행하며 실무 인력 양성.</li>
-                            <li><strong>마이스터 제도 연계:</strong> 바이오의약품 생산, 품질관리 분야에 특화된 고숙련 기술 장인(마이스터) 양성.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="strategy-card">
-                    <div class="header bg-blue-800">일본: 규제 개선 및 해외 인재 유치</div>
-                     <div class="content">
-                        <ul>
-                           <li><strong>규제 샌드박스:</strong> 신기술 실증을 위한 규제 샌드박스를 통해 혁신 기업을 유치하고 관련 인재의 실무 경험 축적 지원.</li>
-                           <li><strong>고도인재 포인트 제도:</strong> 해외 우수 R&D 인력 유치를 위해 영주권 취득 요건을 완화하는 등 파격적인 비자 혜택 제공.</li>
-                           <li><strong>해외 트레이닝 센터:</strong> 올림푸스 등 선도 기업들이 해외에 의료기술 트레이닝 센터를 설립, 현지 인력 양성과 동시에 자사 기술 표준 전파.</li>
-                        </ul>
-                    </div>
-                </div>
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+            <div id="tabs" class="flex flex-wrap justify-center border-b-2 border-gray-200 mb-6">
+                <button data-tab="day1" class="tab-btn active text-lg py-2 px-4 border-b-4 border-transparent transition-colors duration-300">Day 1: 쇼핑과 미식</button>
+                <button data-tab="day2" class="tab-btn text-lg py-2 px-4 border-b-4 border-transparent transition-colors duration-300">Day 2: 날씨 따라 설렘</button>
+                <button data-tab="day3" class="tab-btn text-lg py-2 px-4 border-b-4 border-transparent transition-colors duration-300">Day 3: 감성 데이트</button>
+                <button data-tab="day4" class="tab-btn text-lg py-2 px-4 border-b-4 border-transparent transition-colors duration-300">Day 4: 완벽한 하루</button>
+                <button data-tab="tips" class="tab-btn text-lg py-2 px-4 border-b-4 border-transparent transition-colors duration-300">💖 꿀팁 & 준비물</button>
             </div>
-        </div>
 
-        <!-- Tab 4: Strategy -->
-        <div id="tab-strategy" class="tab-content">
-            <h2 class="section-title">K-바이오헬스 인재 혁신 4대 전략</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-                <div class="strategy-card">
-                    <div class="header bg-strategy-1">1. 실무 중심 교육 혁신</div>
-                    <div class="content">
-                        <p class="font-bold mb-4 text-gray-700">산업계가 즉시 채용 가능한 '준비된 인재' 양성</p>
-                        <ul>
-                            <li><strong>채용 연계형 계약학과 확대:</strong> 의료AI, 규제과학 등 기업 수요 기반 학과 신설</li>
-                            <li><strong>'바이오 전환' 리스킬링 바우처 도입:</strong> IT,화학 경력자 대상 재교육 지원</li>
-                            <li><strong>교수-기업 전문가 공동 강의 의무화:</strong> 전공과목 내 산업 현장 연계 강화</li>
-                        </ul>
+            <div id="tab-content">
+                <div id="day1" class="tab-pane">
+                    <h3 class="text-2xl font-bold text-pink-500 mb-6">DAY 1 | 9/26 (금) - 도착하자마자 다낭 즐기기</h3>
+                    <div class="relative border-l-4 border-pink-200 ml-4 pl-8">
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 1:20</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🛬 다낭 국제공항 도착</h4>
+                            <p class="mt-2 text-gray-600">입국 심사 후 그랩 불러서 바로 한시장으로 달려가자! 짐은 차에 잠깐 둬도 괜찮아.</p>
+                        </div>
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 2:30</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🛍️ 한시장 쇼핑 & 늦은 점심</h4>
+                            <p class="mt-2 text-gray-600">우리의 미션! 정대 하와이안 셔츠랑 커플 크록스 사기! 쇼핑 후 출출한 배는 근처 쌀국수 맛집에서 채우자.</p>
+                            <div class="mt-4 bg-amber-50 p-4 rounded-lg">
+                                <p class="font-bold text-amber-800">📍 점심 추천: 포 박 하이 (Phở Bắc Hải)</p>
+                                <p class="text-sm text-gray-600">진한 국물의 현지인 쌀국수 맛집! 한시장에서 걸어갈 수 있어.<br>
+                                • <b>추천 메뉴:</b> 퍼보따이(Phở Bò Tái, 살짝 익힌 소고기 쌀국수)<br>
+                                • <b>예상 가격:</b> 1인 50,000VND (약 2,800원)</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 4:30</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🏨 다이아몬드시 호텔 체크인 & 휴식</h4>
+                            <p class="mt-2 text-gray-600">쇼핑 끝! 이제 호텔에서 편하게 짐 풀고 잠시 쉬자. 수영장에서 다낭의 첫 일몰을 봐도 좋겠다.</p>
+                        </div>
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 7:00</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🍕 저녁: 피자 포피스 (Pizza 4P's)</h4>
+                            <p class="mt-2 text-gray-600">미케비치 근처에서 가장 핫한 화덕피자 맛집! 분위기도 좋아서 데이트하기 딱이야. 미리 예약하면 좋아!</p>
+                             <div class="mt-4 bg-green-50 p-4 rounded-lg">
+                                <p class="font-bold text-green-800">📍 저녁 추천: Pizza 4P's</p>
+                                <p class="text-sm text-gray-600">일본인이 운영하는 곳으로, 직접 만든 치즈가 일품!<br>
+                                • <b>추천 메뉴:</b> 부라타 프로슈토 피자, 게살 토마토 크림 파스타<br>
+                                • <b>예상 가격:</b> 메뉴 2개 + 음료 = 600,000VND (약 33,000원)</p>
+                            </div>
+                        </div>
+                         <div class="timeline-item">
+                            <p class="font-bold text-lg">오후 9:00</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🌙 미케비치 산책 & 비치 펍</h4>
+                            <p class="mt-2 text-gray-600">배부르게 먹고 소화시킬 겸 미케비치 밤바다를 걷자. 파도 소리를 배경음악 삼아 해변에 있는 펍에서 시원한 칵테일 한잔하며 첫날 마무리!</p>
+                        </div>
                     </div>
                 </div>
-                 <div class="strategy-card">
-                    <div class="header bg-strategy-2">2. 성장 연계 경력 개발</div>
-                    <div class="content">
-                        <p class="font-bold mb-4 text-gray-700">일하고 싶고, 성장할 수 있는 '매력적인 직장' 구축</p>
-                        <ul>
-                            <li><strong>신입 온보딩 프로그램 표준화:</strong> 1년 내 직무교육/멘토링 의무화 및 인센티브</li>
-                            <li><strong>직무별 성장 로드맵 제시:</strong> 생산/품질/인허가 등 직무 전문성 트랙 도입</li>
-                            <li><strong>성과 기반 보상제도 확대:</strong> 중소벤처 스톡옵션/RSU 세제 지원 강화</li>
-                        </ul>
+
+                <div id="day2" class="tab-pane hidden">
+                    <h3 class="text-2xl font-bold text-teal-500 mb-6">DAY 2 | 9/27 (토) - 날씨에 따라 즐기는 두 가지 계획</h3>
+                    <div class="relative border-l-4 border-teal-200 ml-4 pl-8">
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오전</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🍳 조식 & 체크아웃</h4>
+                            <p class="mt-2 text-gray-600">호텔 조식 든든하게 먹고 체크아웃 준비! 그리고 오늘의 날씨를 확인하고 플랜 A, B 중 하나를 선택하는 거야!</p>
+                        </div>
+
+                        <div class="plan-box">
+                            <h4 class="text-xl font-bold text-blue-600">PLAN A: 날씨 맑음 ☀️</h4>
+                            <p class="mt-2 text-gray-600">아침 일찍 예약해둔 <b>바나힐 투어</b> 출발! 황금손이 받치고 있는 골든 브릿지에서 멋진 사진 남기고, 유럽풍 테마파크를 즐기자. 투어가 끝나면 기사님이 마사지샵으로 편하게 데려다줄 거야!</p>
+                        </div>
+
+                        <div class="plan-box">
+                            <h4 class="text-xl font-bold text-slate-600">PLAN B: 날씨 흐림 ☁️</h4>
+                            <p class="mt-2 text-gray-600">체크아웃 후 바로 <b>하얏트 리젠시</b>로 이동! 미리 얼리 체크인 가능한지 확인해보고, 바로 입실해서 완벽한 호캉스를 시작하자. 메인 풀에서 수영하고, 프라이빗 비치에서 여유를 만끽하는 하루!</p>
+                        </div>
+
+                        <div class="timeline-item mt-12 mb-12">
+                            <p class="font-bold text-lg">오후 5:00</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">💆‍♀️ 힐링 마사지 타임</h4>
+                            <p class="mt-2 text-gray-600">바나힐에서 신나게 놀았든, 리조트에서 푹 쉬었든, 여행의 피로는 마사지로 풀어야지! 저녁 먹을 목식당 근처로 예약해뒀어.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <p class="font-bold text-lg">오후 7:00</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🦞 저녁: 목식당 (MỘC Quan)</h4>
+                            <p class="mt-2 text-gray-600">미쉐린 가이드 추천 맛집! 야외 좌석 분위기가 그렇게 좋대. 신선한 해산물을 직접 고르고, 특히 마늘 버터 랍스터는 꼭 먹어봐야 한대. 직원이 다 손질해줘서 편하게 먹기만 하면 돼!</p>
+                        </div>
                     </div>
                 </div>
-                 <div class="strategy-card">
-                    <div class="header bg-strategy-3">3. 지역 거점 생태계 조성</div>
-                    <div class="content">
-                        <p class="font-bold mb-4 text-gray-700">수도권 밖에서도 인재가 모이고 크는 '혁신 클러스터' 육성</p>
-                        <ul>
-                            <li><strong>'K-바이오 혁신지구' 지정:</strong> 비수도권에 R&D-인력양성 프로젝트 집중</li>
-                            <li><strong>지역인재 채용 파격 인센티브:</strong> 법인세 감면, 고용보조금 등 패키지 지원</li>
-                            <li><strong>온/오프라인 채용 채널 상시 운영:</strong> 지역 기업과 수도권 인재 연결</li>
-                        </ul>
+
+                <div id="day3" class="tab-pane hidden">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-6">DAY 3 | 9/28 (일) - 다낭 시내 감성 데이트</h3>
+                     <div class="relative border-l-4 border-amber-200 ml-4 pl-8">
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오전</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">☀️ 리조트에서 보내는 여유로운 아침</h4>
+                            <p class="mt-2 text-gray-600">조식 느긋하게 먹고, 메인 풀에서 수영하거나 논 누옥 해변을 산책하자. 아무것도 안 하고 선베드에 누워만 있어도 행복할 거야.</p>
+                        </div>
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 12:00</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🍽️ 점심: Bếp Cuốn Đà Nẵng</h4>
+                            <p class="mt-2 text-gray-600">여기도 미쉐린 맛집! 베트남 전통 요리를 예쁘게 맛볼 수 있는 곳이래. 다양한 음식이 나오는 'Mẹt Bếp Cuốn' 플래터가 유명하니까 우리도 그걸로 시켜보자!</p>
+                        </div>
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">💒 핑크 성당 & 콩카페 데이트</h4>
+                            <p class="mt-2 text-gray-600">우리가 딱 정한 오후 코스! 핑크빛으로 예쁘게 칠해진 다낭 대성당 앞에서 인생샷 남기자. 그리고 바로 근처에 있는 콩카페로 가서 시그니처 메뉴인 코코넛 스무디 커피 마시면서 더위 식히는 거야!</p>
+                        </div>
+                         <div class="timeline-item">
+                            <p class="font-bold text-lg">저녁 & 밤</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🍷 호텔 레스토랑 & 프라이빗 비치 '바다멍'</h4>
+                            <p class="mt-2 text-gray-600">마지막 밤은 특별하게! 하얏트 리젠시의 '비치 하우스' 레스토랑에서 근사한 저녁 식사를 하자. 그리고 준비해 간 돗자리를 프라이빗 비치에 펴고 누워서, 파도 소리 들으며 '바다멍' 때리면서 우리만의 시간을 보내는 거야.</p>
+                        </div>
                     </div>
                 </div>
-                 <div class="strategy-card">
-                    <div class="header bg-strategy-4">4. 수요자 중심 정책 연결</div>
-                    <div class="content">
-                        <p class="font-bold mb-4 text-gray-700">흩어진 정보를 모으고 장벽을 낮추는 '스마트 행정' 구현</p>
-                        <ul>
-                            <li><strong>'K-바이오 HRD' 통합 플랫폼 구축:</strong> 범부처 인력 사업 원스톱 신청/관리</li>
-                            <li><strong>AI 기반 맞춤형 정책 추천:</strong> 기업 특성 분석 후 최적 지원사업 자동 추천</li>
-                            <li><strong>신청 절차 간소화 및 Fast-Track 도입:</strong> 우수 중소기업 대상 심사 기간 단축</li>
-                        </ul>
+
+                <div id="day4" class="tab-pane hidden">
+                    <h3 class="text-2xl font-bold text-indigo-500 mb-6">DAY 4 | 9/29 (월) - 호이안에서 보내는 완벽한 하루</h3>
+                     <div class="relative border-l-4 border-indigo-200 ml-4 pl-8">
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오전</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🏖️ 마지막 호캉스 & 레이트 체크아웃 준비</h4>
+                            <p class="mt-2 text-gray-600">마지막 날이라고 아쉬워하지 말자! 조식 먹고 오전 내내 리조트에서 수영하고 놀자. 호텔에 레이트 체크아웃(늦은 체크아웃) 가능한지 미리 확인해두면 좋아!</p>
+                        </div>
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 1:00</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🏮 호이안으로 출발 & 점심</h4>
+                            <p class="mt-2 text-gray-600">체크아웃 후 짐을 맡기고 그랩을 불러 호이안으로! 도착해서는 강가가 보이는 예쁜 식당에서 점심을 먹자.</p>
+                             <div class="mt-4 bg-amber-50 p-4 rounded-lg">
+                                <p class="font-bold text-amber-800">📍 점심 추천: 모닝글로리 (Morning Glory Original)</p>
+                                <p class="text-sm text-gray-600">호이안에서 가장 유명한 맛집 중 하나! 분위기도 좋고 음식도 맛있어.<br>
+                                • <b>추천 메뉴:</b> 화이트로즈(Banh Bao Vac), 반쎄오, 완탄<br>
+                                • <b>예상 가격:</b> 메뉴 2~3개 + 음료 = 500,000VND (약 28,000원)</p>
+                            </div>
+                        </div>
+                         <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 3:00</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🛶 소원배 & 구시가지 산책</h4>
+                            <p class="mt-2 text-gray-600">배부르니 이제 호이안을 즐길 시간! 낮에 타는 소원배는 또 다른 매력이 있대. 배 위에서 여유를 즐기고, 노란색 건물이 가득한 구시가지 골목골목을 누비며 사진도 찍고 아기자기한 소품샵도 구경하자.</p>
+                        </div>
+                        <div class="timeline-item mb-12">
+                             <p class="font-bold text-lg">오후 6:00</p>
+                             <h4 class="text-xl font-bold text-gray-800 mt-1">💖 여행의 마지막 저녁 식사</h4>
+                             <p class="mt-2 text-gray-600">해가 지고 등불이 하나둘 켜지면 호이안은 더 로맨틱해져. 여행의 마지막을 장식할 멋진 저녁을 먹자.</p>
+                              <div class="mt-4 bg-red-50 p-4 rounded-lg">
+                                <p class="font-bold text-red-800">📍 저녁 추천: 미쓰리 (Miss Ly)</p>
+                                <p class="text-sm text-gray-600">아늑한 분위기의 가정식 맛집. 예약은 필수!<br>
+                                • <b>추천 메뉴:</b> 까오라우(Cao Lầu), 프라이드 완탄(Fried Wonton)<br>
+                                • <b>예상 가격:</b> 메뉴 2개 + 음료 = 400,000VND (약 22,000원)</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item mb-12">
+                            <p class="font-bold text-lg">오후 7:30</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🛒 롯데마트 쇼핑</h4>
+                            <p class="mt-2 text-gray-600">호이안에서 다낭으로 돌아오는 길에 롯데마트에 들러 마지막 쇼핑! 맡겨둔 짐은 기사님께 부탁해서 호텔에서 찾아오자.</p>
+                        </div>
+                         <div class="timeline-item">
+                            <p class="font-bold text-lg">오후 8:45</p>
+                            <h4 class="text-xl font-bold text-gray-800 mt-1">🛫 다낭 국제공항으로</h4>
+                            <p class="mt-2 text-gray-600">이제 정말 떠날 시간! 10시 45분 비행기니까 늦어도 9시까지는 공항에 도착하자. 즐거웠던 추억 가득 안고 한국으로! 💖</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tips" class="tab-pane hidden">
+                    <h3 class="text-2xl font-bold text-pink-500 mb-6">💖 꿀팁 & 준비물 체크리스트</h3>
+                    <div class="space-y-4 text-gray-800">
+                        <div class="bg-rose-100 p-4 rounded-lg">
+                            <p><b>✅ 이동은 그랩(Grab)이 최고!:</b> 베트남 필수 앱! 미리 한국에서 카드 등록해두면 아주 편해. 4일차처럼 장시간 이동은 흥정을 통해 기사님을 하루 빌리는 것도 좋은 방법!</p>
+                        </div>
+                         <div class="bg-rose-100 p-4 rounded-lg">
+                            <p><b>✅ 환전은 시내 금은방에서:</b> 공항에서는 최소한만 바꾸고, 다낭 시내 한시장 근처 금은방에서 바꾸는 게 환율이 좋아.</p>
+                        </div>
+                        <div class="bg-rose-100 p-4 rounded-lg">
+                            <p><b>✅ 바나힐 투어 & 레이트 체크아웃:</b> 날씨 좋은 날을 위한 바나힐 투어는 미리 예약 필수! 4일차를 위해 하얏트 리젠시에 레이트 체크아웃 가능 여부도 미리 메일로 문의해두자.</p>
+                        </div>
+                        <div class="bg-rose-100 p-4 rounded-lg">
+                            <p><b>✅ 돗자리 챙기기:</b> 3일차 밤, 우리만의 '바다멍' 타임을 위해 작은 돗자리 하나 챙겨가면 감성 폭발!</p>
+                        </div>
+                        <div class="bg-rose-100 p-4 rounded-lg">
+                            <p><b>✅ 우리 커플 준비물:</b> 여권, 항공권, 선크림, 선글라스, 모자, 수영복, 얇은 가디건(실내 에어컨 대비), 보조배터리, 상비약, 그리고 가장 중요한 설레는 마음! 💕</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -348,95 +259,25 @@
     </div>
 
     <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tab-button");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-        
-        Chart.register(ChartDataLabels);
-        Chart.defaults.font.family = "'Pretendard', sans-serif";
-        Chart.defaults.plugins.datalabels.display = false;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // Main Chart
-            const mainCtx = document.getElementById('mainWorkforceChart').getContext('2d');
-            new Chart(mainCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['바이오산업', '의료기기', '디지털헬스케어'],
-                    datasets: [{
-                        label: '총 산업기술인력 (명)',
-                        data: [35034, 16862, 15635],
-                        backgroundColor: 'rgba(66, 133, 244, 0.7)',
-                        yAxisID: 'y'
-                    }, {
-                        label: '부족률 (%)',
-                        data: [3.1, 1.9, 2.0],
-                        type: 'line',
-                        borderColor: '#e94235',
-                        backgroundColor: '#e94235',
-                        yAxisID: 'y1',
-                        tension: 0.2
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { title: { display: true, text: '분야별 인력 규모 및 부족률', font: { size: 18 } } },
-                    scales: {
-                        y: { position: 'left', title: { display: true, text: '인원 (명)' } },
-                        y1: { position: 'right', title: { display: true, text: '부족률 (%)' }, grid: { drawOnChartArea: false }, ticks: { callback: value => value + '%' } }
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+
+                tabPanes.forEach(pane => {
+                    if (pane.id === tabId) {
+                        pane.classList.remove('hidden');
+                    } else {
+                        pane.classList.add('hidden');
                     }
-                }
-            });
-
-            // Deep Dive Charts
-            const digitalHealthCtx = document.getElementById('digitalHealthChart').getContext('2d');
-            new Chart(digitalHealthCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['SW 개발', '데이터 분석', '인허가(RA)', '기타'],
-                    datasets: [{
-                        data: [41.0, 37.1, 14.0, 7.9],
-                        backgroundColor: ['#4285F4', '#34A853', '#FBBC05', '#EA4335'],
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '필요 역량 분포', font: {size: 14} }, datalabels: { display: true, color: '#fff', formatter: (val) => val.toFixed(1) + '%' } } }
-            });
-
-            const bioIndustryCtx = document.getElementById('bioIndustryChart').getContext('2d');
-             new Chart(bioIndustryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['바이오화학', 'R&D', '생산공정', '기타'],
-                    datasets: [{
-                        data: [60.8, 42.7, 26.6, 15.2], //기타는 가상
-                         backgroundColor: ['#0F9D58', '#DB4437', '#4285F4', '#F4B400'],
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '필요 인력 분야', font: {size: 14} }, datalabels: { display: true, color: '#fff', formatter: (val) => val.toFixed(1) + '%' } } }
-            });
-
-            const medicalDeviceCtx = document.getElementById('medicalDeviceChart').getContext('2d');
-            new Chart(medicalDeviceCtx, {
-                 type: 'bar',
-                 data: {
-                     labels: ['학사급 R&D', '전체 R&D', '전체 기술직'],
-                     datasets: [{
-                         label: '인력 부족률 (%)',
-                         data: [11.9, 6.8, 1.5],
-                         backgroundColor: ['#673AB7', '#9575CD', '#D1C4E9']
-                     }]
-                 },
-                 options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'R&D 인력난 심층 분석', font: {size: 14} }, legend: {display: false}, datalabels: {display: true, anchor: 'end', align: 'top', color: '#333'} } }
+                });
             });
         });
     </script>
